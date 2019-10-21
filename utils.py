@@ -57,7 +57,12 @@ def get_libraries(install_dir, including_install=True):
     """
 
     # Parse the vdf file into JSON
-    f = vdf.parse(open(install_dir + "\\steamapps\\libraryfolders.vdf"))
+    try:
+        f = vdf.parse(open(install_dir + "\\steamapps\\libraryfolders.vdf"))
+    except:
+        print("Could not find libraryfoldes.vdf")
+        return
+    
     libraries = []
 
     # Include the installation directory as a library, if wanted
@@ -194,10 +199,17 @@ def generate_appid_for_nonsteam_game(name, target):
     return str(full_64)
 
 def get_non_steam_games():
+    games_list = []
+
     # Go through every user on Steam
     for user in get_steam_users():
         # Open the shortcuts.vdf file that contains a list of Non-Steam games
-        f = open(get_steam_install_path() + r"\\userdata\\" + user + "\\config\\shortcuts.vdf", "rb")
+        try:
+            f = open(get_steam_install_path() + r"\\userdata\\" + user + "\\config\\shortcuts.vdf", "rb")
+        except:
+            print("Could not find shortcuts.vdf")
+            break
+
         allbytes = []
         try:
             byte = f.read(1)
@@ -246,7 +258,6 @@ def get_non_steam_games():
         #   "name": "Minecraft",
         #   "exe": "C:\Games\Minecraft.exe"
         # }
-        games_list = []
         for game in games:
             """
             The contents of the game info can contain some of the following:
