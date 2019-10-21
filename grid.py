@@ -56,3 +56,5 @@ for game in games:
     file_name = utils.get_steam_install_path() + "\\userdata\\" + game["user"] + "\\config\\grid\\" + game["appid"] + ".png"
     urllib.request.urlretrieve(url, file_name)
     print("{} - Grid downloaded successfully from Steam Grid DB.".format(game["name"]))
+
+print("Grid images downloaded. Please restart Steam to see the changes.")
