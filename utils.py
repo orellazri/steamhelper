@@ -207,14 +207,13 @@ def get_non_steam_games():
         try:
             f = open(get_steam_install_path() + r"\\userdata\\" + user + "\\config\\shortcuts.vdf", "rb")
         except:
-            print("Could not find shortcuts.vdf")
-            break
+            print("Could not find shortcuts.vdf for user " + user)
+            continue
 
         allbytes = []
         try:
             byte = f.read(1)
             while byte != b'':
-                # do stuff
                 allbytes.append(byte)
                 byte = f.read(1)
         finally:
@@ -230,8 +229,10 @@ def get_non_steam_games():
         b02 = bytearray.fromhex('02').decode()
 
         # Find iternations of "AppName" for each game
+        # TODO: Sometimes it's "appname" and not "AppName", need to normalize it
+        # to search for both
         iters = []
-        for iter in re.finditer("AppName", decoded):
+        for iter in re.finditer("appname", decoded):
             iters.append({'start': iter.start(), 'end': iter.end()})
 
         # Iterate over the AppNames to make a list of the games
