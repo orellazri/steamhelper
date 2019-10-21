@@ -30,7 +30,7 @@ def get_id_by_username(username):
             username - Steam username
     """
 
-    result = get_request("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=" + config.API_KEY + "&vanityurl=" + username)
+    result = get_request("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=" + config.STEAM_API_KEY + "&vanityurl=" + username)
     id = None
 
     try:
@@ -150,10 +150,10 @@ def get_installed_games():
             if file.endswith("acf"):
                 # Get the game details from the manifest file
                 f = vdf.parse(open(library + file))
-                id = f["AppState"]["appid"]
+                appid = f["AppState"]["appid"]
                 name = f["AppState"]["name"]
 
-                games.append({"id": id, "name": name})
+                games.append({"name": name, "appid": appid})
 
     return games
 
@@ -266,7 +266,8 @@ def get_non_steam_games():
             games_list.append({
                 "name": name,
                 "exe": exe,
-                "appid": generate_appid_for_nonsteam_game(name, exe)
+                "appid": generate_appid_for_nonsteam_game(name, exe),
+                "user": user
             })
 
     return games_list

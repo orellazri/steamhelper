@@ -6,3 +6,6 @@ When running this file, you will get, as output, a list of the Steam games that 
 
 ### nonsteam.py
 When running this file, you will get, as output, a list of the Non-Steam games that you added to your Steam library.
+
+### grid.py
+When running this file, it will search Steam Grid DB for grid images for your Non-Steam games and download them to your Steam's grid folder and rename then accordingly.
