@@ -7,6 +7,10 @@ import os
 import subprocess
 import crc_algorithms
 import re
+import colorama
+import urllib
+import math
+from PIL import Image, ImageFilter, ImageEnhance, ImageFont, ImageDraw
 
 def get_request(url):
 
@@ -283,3 +287,85 @@ def get_non_steam_games():
             })
 
     return games_list
+
+def create_grid_image(game, file_name):
+    """
+        Creates a grid image for a game by looking for a big image
+        on IGDB, and then manipulating it to look good as a grid image
+
+        Paramaters:
+            game - A dictionary containing the Non-Steam game information
+            file_name - A string telling the function where to save the image to
+    """
+
+    headers = {"user-key": config.IGDB_API_KEY}
+    
+    # Search IGDB for the game ID by providing the game name
+    content = "search \"{}\"; fields artworks,cover,slug;".format(game["name"])
+    try:
+        r = requests.post("https://api-v3.igdb.com/games/", headers=headers, data=content).json()
+    except:
+        print("{}[X]{} Could not find {} on IGDB.".format(colorama.Back.RED, colorama.Style.RESET_ALL, game["name"]))
+        return
+
+    if not r:
+        print("{}[X]{} Could not find {} on IGDB.".format(colorama.Back.RED, colorama.Style.RESET_ALL, game["name"]))
+        return
+
+    # Save the game's slug to use as text for the grid image
+    slug = r[0]["slug"]
+
+    # Set the cover image url from IGDB
+    cover = r[0]["cover"]
+    content = "fields *; where id={};".format(cover)
+    try:
+        r = requests.post("https://api-v3.igdb.com/covers", headers=headers, data=content).json()
+    except:
+        print("{}[X]{} Could not find a cover image for {} on IGDB.".format(colorama.Back.RED, colorama.Style.RESET_ALL, game["name"]))
+        return False
+
+    if not r:
+        print("{}[X]{} Could not find a cover image for {} on IGDB.".format(colorama.Back.RED, colorama.Style.RESET_ALL, game["name"]))
+        return False
+
+    # Fix the cover image URL and set the link to the "screenshot_huge" template
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
+    cover_url = "http://" + r[0]["url"].replace("//", "").replace("t_thumb", "t_screenshot_huge")
+    temp_location = "{}.temp.png".format(file_name, game["name"])
+    
+    # Set urllib with the user agent to download the image to the temporary location
+    opener = urllib.request.build_opener()
+    opener.addheaders = [("User-Agent", user_agent)]
+    urllib.request.install_opener(opener)
+    urllib.request.urlretrieve(cover_url, temp_location)
+
+    # Open the temporary image to edit it
+    im = Image.open(temp_location)
+    width, height = im.size
+
+    # Blur the image
+    im = im.filter(ImageFilter.GaussianBlur(radius=6))
+
+    # Darken the image
+    im = ImageEnhance.Brightness(im).enhance(0.5)
+
+    # Draw the game's name on the image
+    name_text = game["name"]
+    if slug != "":
+        name_text = slug.replace('-', ' ')
+    if len(name_text) > 15:
+        # Don't write the game's name if it's long
+        name_text=''
+
+    font = ImageFont.truetype("grid-font.ttf", 120)
+
+    # Position the game's name (Align horizontally)
+    text_width, text_height = ImageDraw.Draw(im).textsize(name_text, font=font)
+    ImageDraw.Draw(im).text(((width - text_width) / 2, 108), name_text, font=font, fill=(0, 0, 0, 100))
+    ImageDraw.Draw(im).text(((width - text_width) / 2, 100), name_text, font=font)
+
+    im.save(file_name, "PNG")
+
+    os.remove(temp_location)
+
+    return True
