@@ -5,6 +5,7 @@ import vdf
 import requests
 import os
 import subprocess
+import crc_algorithms
 
 def get_request(url):
 
@@ -157,3 +158,27 @@ def launch_steam_game(id):
 
     path = get_steam_install_path() + "\\Steam.exe"
     subprocess.call(path + " -applaunch " + id)
+
+def generate_appid_for_nonsteam_game(name, target):
+    """
+        (Thanks to github.com/scottrice)
+
+        Generates the app ID for a Non-Steam game.
+        This ID is a 64bit integer, where the first 32bits are
+        a CRC32 based off of the name and target (with the added
+        condition that the first bit is always high), and
+        the last 32bits are 0x02000000.
+
+        Paramteters:
+            name - Game name
+            target - Exe file location
+
+        Returns:
+            The app ID as a string
+    """
+    
+    algorithm = crc_algorithms.Crc(width = 32, poly = 0x04C11DB7, reflect_in = True, xor_in = 0xffffffff, reflect_out = True, xor_out = 0xffffffff)
+    input_string = ''.join([target,name])
+    top_32 = algorithm.bit_by_bit(input_string) | 0x80000000
+    full_64 = (top_32 << 32) | 0x02000000
+    return str(full_64)
