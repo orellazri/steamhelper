@@ -73,8 +73,6 @@ def get_libraries(install_dir, including_install=True):
 
     return libraries
 
-#print(get_libraries("C:\\Program Files (x86)\\Steam\\"))
-
 def get_steam_install_path():
 
     """
@@ -103,6 +101,17 @@ def get_steam_install_path():
         print("Could not find Steam installation directory.")
         print(e)
         return None
+
+def get_steam_users():
+    """
+        Gets the users ID's on Steam by checking in the
+        Steam installation directory under the "userdata" folder
+
+        Returns:
+            A list of the user ID's on Steam
+    """
+
+    return os.listdir(get_steam_install_path() + "\\userdata")
 
 def is_64():
 
@@ -176,7 +185,7 @@ def generate_appid_for_nonsteam_game(name, target):
         Returns:
             The app ID as a string
     """
-    
+
     algorithm = crc_algorithms.Crc(width = 32, poly = 0x04C11DB7, reflect_in = True, xor_in = 0xffffffff, reflect_out = True, xor_out = 0xffffffff)
     input_string = ''.join([target,name])
     top_32 = algorithm.bit_by_bit(input_string) | 0x80000000
