@@ -288,7 +288,7 @@ def get_non_steam_games():
 
     return games_list
 
-def create_grid_image(game, file_name):
+def create_grid_image(game, file_name, with_text=False):
     """
         Creates a grid image for a game by looking for a big image
         on IGDB, and then manipulating it to look good as a grid image
@@ -341,31 +341,95 @@ def create_grid_image(game, file_name):
 
     # Open the temporary image to edit it
     im = Image.open(temp_location)
+
     width, height = im.size
 
-    # Blur the image
-    im = im.filter(ImageFilter.GaussianBlur(radius=6))
+    # If the user wants to have the game's name of the image
+    if with_text == True:
+        # Blur the image
+        im = im.filter(ImageFilter.GaussianBlur(radius=5))
 
-    # Darken the image
-    im = ImageEnhance.Brightness(im).enhance(0.5)
+        # Darken the image
+        im = ImageEnhance.Brightness(im).enhance(0.8)
 
-    # Draw the game's name on the image
-    name_text = game["name"]
-    if slug != "":
-        name_text = slug.replace('-', ' ')
-    if len(name_text) > 15:
-        # Don't write the game's name if it's long
-        name_text=''
+        # Draw the game's name on the image
+        name_text = game["name"]
+        if slug != "":
+            name_text = slug.replace('-', ' ')
+        if len(name_text) > 15:
+            # Don't write the game's name if it's long
+            name_text=''
 
-    font = ImageFont.truetype("grid-font.ttf", 120)
+        font = ImageFont.truetype("grid-font.ttf", 120)
 
-    # Position the game's name (Align horizontally)
-    text_width, text_height = ImageDraw.Draw(im).textsize(name_text, font=font)
-    ImageDraw.Draw(im).text(((width - text_width) / 2, 108), name_text, font=font, fill=(0, 0, 0, 100))
-    ImageDraw.Draw(im).text(((width - text_width) / 2, 100), name_text, font=font)
+        # Position the game's name (Align horizontally)
+        text_width, text_height = ImageDraw.Draw(im).textsize(name_text, font=font)
+        ImageDraw.Draw(im).text(((width - text_width) / 2, 100), name_text, font=font, fill=(0, 0, 0, 100))
+        ImageDraw.Draw(im).text(((width - text_width) / 2, 108), name_text, font=font)
 
     im.save(file_name, "PNG")
+
+    # Resize the image and crop to center
+    resize_and_crop(file_name, file_name, (460, 215))
 
     os.remove(temp_location)
 
     return True
+
+def resize_and_crop(img_path, modified_path, size, crop_type='middle'):
+    """
+    (Thanks to github.com/sigilioso)
+
+    Resize and crop an image to fit the specified size.
+
+    args:
+        img_path: path for the image to resize.
+        modified_path: path to store the modified image.
+        size: `(width, height)` tuple.
+        crop_type: can be 'top', 'middle' or 'bottom', depending on this
+            value, the image will cropped getting the 'top/left', 'middle' or
+            'bottom/right' of the image to fit the size.
+    raises:
+        Exception: if can not open the file in img_path of there is problems
+            to save the image.
+        ValueError: if an invalid `crop_type` is provided.
+    """
+    # If height is higher we resize vertically, if not we resize horizontally
+    img = Image.open(img_path)
+    # Get current and desired ratio for the images
+    img_ratio = img.size[0] / float(img.size[1])
+    ratio = size[0] / float(size[1])
+    #The image is scaled/cropped vertically or horizontally depending on the ratio
+    if ratio > img_ratio:
+        img = img.resize((size[0], round(size[0] * img.size[1] / img.size[0])),
+                Image.ANTIALIAS)
+        # Crop in the top, middle or bottom
+        if crop_type == 'top':
+            box = (0, 0, img.size[0], size[1])
+        elif crop_type == 'middle':
+            box = (0, round((img.size[1] - size[1]) / 2), img.size[0],
+                   round((img.size[1] + size[1]) / 2))
+        elif crop_type == 'bottom':
+            box = (0, img.size[1] - size[1], img.size[0], img.size[1])
+        else :
+            raise ValueError('ERROR: invalid value for crop_type')
+        img = img.crop(box)
+    elif ratio < img_ratio:
+        img = img.resize((round(size[1] * img.size[0] / img.size[1]), size[1]),
+                Image.ANTIALIAS)
+        # Crop in the top, middle or bottom
+        if crop_type == 'top':
+            box = (0, 0, size[0], img.size[1])
+        elif crop_type == 'middle':
+            box = (round((img.size[0] - size[0]) / 2), 0,
+                   round((img.size[0] + size[0]) / 2), img.size[1])
+        elif crop_type == 'bottom':
+            box = (img.size[0] - size[0], 0, img.size[0], img.size[1])
+        else :
+            raise ValueError('ERROR: invalid value for crop_type')
+        img = img.crop(box)
+    else :
+        img = img.resize((size[0], size[1]),
+                Image.ANTIALIAS)
+        # If the scale is the same, we do not need to crop
+    img.save(modified_path)
