@@ -354,11 +354,15 @@ def create_grid_image(game, file_name, with_text=False):
 
         # Draw the game's name on the image
         name_text = game["name"]
+
+        # Make new lines if the name is too long
+        # NOTE: Currently only makes one new line if needed
         if slug != "":
             name_text = slug.replace('-', ' ')
         if len(name_text) > 15:
-            # Don't write the game's name if it's long
-            name_text=''
+            space = name_text.find(' ', 15)
+            if space != '':
+                name_text = replace_str_index(name_text, space, '\n')
 
         font = ImageFont.truetype("grid-font.ttf", 120)
 
@@ -433,3 +437,6 @@ def resize_and_crop(img_path, modified_path, size, crop_type='middle'):
                 Image.ANTIALIAS)
         # If the scale is the same, we do not need to crop
     img.save(modified_path)
+
+def replace_str_index(text,index=0,replacement=''):
+    return '%s%s%s'%(text[:index],replacement,text[index+1:])
