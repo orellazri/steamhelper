@@ -93,7 +93,14 @@ for game in games:
 
 # Try to find any other image for the games that the script
 # could not find images for on SteamGridDB
-if len(not_found_image) > 0:
+# Set to False because I don't want the script to search
+# for different dimension of images. You can set this to True.
+FIND_OTHER_IMAGES = False 
+if FIND_OTHER_IMAGES == False:
+    for game in not_found_image:
+        not_found_anything.append(game)
+
+if len(not_found_image) > 0 and FIND_OTHER_IMAGES == True:
     print("\nTrying to find different grid images on SteamGridDB...\n")
 
     for game in not_found_image:
