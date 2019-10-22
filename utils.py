@@ -11,6 +11,7 @@ import colorama
 import urllib
 import math
 from PIL import Image, ImageFilter, ImageEnhance, ImageFont, ImageDraw
+from difflib import SequenceMatcher
 
 def get_request(url):
 
@@ -330,7 +331,7 @@ def create_grid_image(game, file_name, with_text=False):
 
     # Fix the cover image URL and set the link to the "screenshot_huge" template
     user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
-    cover_url = "http://" + r[0]["url"].replace("//", "").replace("t_thumb", "t_screenshot_huge")
+    cover_url = "http://" + r[0]["url"].replace("//", "").replace("t_thumb", "t_1080p")
     temp_location = "{}.temp.png".format(file_name, game["name"])
     
     # Set urllib with the user agent to download the image to the temporary location
@@ -373,7 +374,7 @@ def create_grid_image(game, file_name, with_text=False):
 
     im.save(file_name, "PNG")
 
-    # Resize the image and crop to center
+    # Resize the image and crop
     resize_and_crop(file_name, file_name, (460, 215))
 
     os.remove(temp_location)
@@ -440,3 +441,6 @@ def resize_and_crop(img_path, modified_path, size, crop_type='middle'):
 
 def replace_str_index(text,index=0,replacement=''):
     return '%s%s%s'%(text[:index],replacement,text[index+1:])
+
+def string_similarity(a, b):
+    return SequenceMatcher(None, a, b).ratio()

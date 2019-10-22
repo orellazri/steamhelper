@@ -59,7 +59,20 @@ for game in games:
         continue
 
     r = r["data"]
-    game_id = r[0]["id"]
+
+    # Check which entry's name is most similar to the original game name
+    max_similarity = 0
+    max_similarity_index = 0
+    i = 0
+    for entry in r:
+        ratio = utils.string_similarity(name, entry["name"])
+        if ratio > max_similarity:
+            max_similarity = ratio
+            max_similarity_index = i
+
+        i += 1
+
+    game_id = r[max_similarity_index]["id"]
 
     # Search grid images on SteamGridDB
     try:
